@@ -40,6 +40,14 @@ impl fmt::Debug for Addr {
     }
 }
 
+impl fmt::Display for ParseAddrError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for ParseAddrError {}
+
 #[cfg(test)]
 mod test {
     use super::*;
