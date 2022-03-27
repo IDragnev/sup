@@ -62,13 +62,13 @@ mod test {
     #[test]
     fn load_lib_invalid_name() {
         let l = Library::new("name\0abcd");
-        matches!(l, Err(LoadLibError::InvalidLibName));
+        assert!(matches!(l, Err(LoadLibError::InvalidLibName)));
     }
 
     #[test]
     fn load_lib_non_existing_lib() {
         let l = Library::new("non_existing_lib_name");
-        matches!(l, Err(LoadLibError::LibNotFound));
+        assert!(matches!(l, Err(LoadLibError::LibNotFound)));
     }
 
     #[test]
@@ -80,14 +80,14 @@ mod test {
     fn get_proc_non_existent() {
         let l = Library::new(TEST_DLL_NAME).unwrap();
         let p = l.get_proc::<fn() -> ()>("NoSuchProcName");
-        matches!(p, Err(GetProcError::ProcNotFound));
+        assert!(matches!(p, Err(GetProcError::ProcNotFound)));
     }
     
     #[test]
     fn get_proc_invalid_name() {
         let l = Library::new(TEST_DLL_NAME).unwrap();
         let p = l.get_proc::<fn() -> ()>("proc\0name");
-        matches!(p, Err(GetProcError::InvalidProcName));
+        assert!(matches!(p, Err(GetProcError::InvalidProcName)));
     }
 
     #[test]
