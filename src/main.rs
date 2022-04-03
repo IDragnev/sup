@@ -15,7 +15,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     });
     let dest = ipv4::Addr::parse(&arg)?;
 
-    icmp::ping(dest)?;
+    icmp::Request::new(dest)
+        .ttl(128)
+        .data("Lorem ipsum dolor sit amet")
+        .send()?;
 
     Ok(())
 }
