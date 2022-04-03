@@ -3,6 +3,7 @@ use std::{
     num::ParseIntError,
 };
 
+#[derive(Copy, Clone)]
 pub struct Addr(pub [u8; 4]);
 
 #[derive(Debug)]

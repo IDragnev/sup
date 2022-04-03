@@ -1,6 +1,10 @@
 mod icmp_sys;
 
-use std::mem::size_of;
+use std::time::Duration;
+use std::mem::{
+    size_of,
+    transmute,
+};
 use crate::{
     ipv4,
 };
@@ -10,6 +14,14 @@ pub struct Request {
     ttl: u8,
     timeout: u32,
     data: Option<Vec<u8>>,
+}
+
+#[derive(Clone)]
+pub struct Reply {
+    pub addr: ipv4::Addr,
+    pub data: Vec<u8>,
+    pub rtt: Duration,
+    pub ttl: u8,
 }
 
 impl Request {
@@ -39,13 +51,14 @@ impl Request {
         self
     }
 
-    pub fn send(self) -> Result<(), String> {
+    pub fn send(self) -> Result<Reply, String> {
         let handle = icmp_sys::IcmpCreateFile();
-
+        
         let data = self.data.unwrap_or_default();
-
+        
+        let reserved_reply_size = 8;
         let reply_size = size_of::<icmp_sys::IcmpEchoReply>();
-        let reply_buf_size = reply_size + 8 + data.len();
+        let reply_buf_size = reply_size + reserved_reply_size + data.len();
         let mut reply_buf = vec![0_u8; reply_buf_size];
     
         let options = icmp_sys::IpOptionInformation {
@@ -71,7 +84,20 @@ impl Request {
 
         match r {
             0 => Err("IcmpSendEcho failed!".to_string()),
-            _ => Ok(()),
+            _ => {
+                let reply: &icmp_sys::IcmpEchoReply = unsafe { transmute(&reply_buf[0]) };
+                let data: &[u8] = unsafe {
+                    let data_ptr: *const u8 = transmute(&reply_buf[reply_size + reserved_reply_size]);
+                    std::slice::from_raw_parts(data_ptr, reply.data_size as usize)
+                };
+
+                Ok(Reply {
+                    addr: reply.address,
+                    data: data.into(),
+                    rtt: Duration::from_millis(reply.rtt as u64),
+                    ttl: reply.options.ttl,
+                })
+            },
         }
     }
 }
