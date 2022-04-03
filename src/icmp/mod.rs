@@ -66,7 +66,9 @@ impl Request {
             reply_buf_size as u32,
             self.timeout,
         );
-    
+
+        icmp_sys::IcmpCloseHandle(handle);
+
         match r {
             0 => Err("IcmpSendEcho failed!".to_string()),
             _ => Ok(()),
