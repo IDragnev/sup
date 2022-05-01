@@ -86,14 +86,14 @@ impl Request {
             0 => Err("IcmpSendEcho failed!".to_string()),
             _ => {
                 let reply: &icmp_sys::IcmpEchoReply = unsafe { transmute(&reply_buf[0]) };
-                let data: &[u8] = unsafe {
+                let reply_data: &[u8] = unsafe {
                     let data_ptr: *const u8 = transmute(&reply_buf[reply_size + reserved_reply_size]);
                     std::slice::from_raw_parts(data_ptr, reply.data_size as usize)
                 };
 
                 Ok(Reply {
                     addr: reply.address,
-                    data: data.into(),
+                    data: reply_data.into(),
                     rtt: Duration::from_millis(reply.rtt as u64),
                     ttl: reply.options.ttl,
                 })
